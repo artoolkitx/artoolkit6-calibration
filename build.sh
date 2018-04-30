@@ -95,21 +95,6 @@ else
     CPUS=1
 fi
 
-# Function to allow check for required packages.
-function check_package {
-	# Variant for distros that use debian packaging.
-	if (type dpkg-query >/dev/null 2>&1) ; then
-		if ! $(dpkg-query -W -f='${Status}' $1 | grep -q '^install ok installed$') ; then
-			echo "Warning: required package '$1' does not appear to be installed. To install it use 'sudo apt-get install $1'."
-		fi
-	# Variant for distros that use rpm packaging.
-	elif (type rpm >/dev/null 2>&1) ; then
-		if ! $(rpm -qa | grep -q $1) ; then
-			echo "Warning: required package '$1' does not appear to be installed. To install it use 'sudo dnf install $1'."
-		fi
-	fi
-}
-
 function rawurlencode() {
     local string="${1}"
     local strlen=${#string}

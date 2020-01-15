@@ -872,7 +872,7 @@
 				TargetAttributes = {
 					4A9141FF1DF6450200DF4FEE = {
 						CreatedOnToolsVersion = 8.1;
-						DevelopmentTeam = 7ER2WP8VB3;
+						DevelopmentTeam = EA4A28G9X5;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -882,6 +882,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 				Base,
 			);
@@ -1079,7 +1080,7 @@
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = 7ER2WP8VB3;
+				DEVELOPMENT_TEAM = EA4A28G9X5;
 				INFOPLIST_FILE = Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				OTHER_CODE_SIGN_FLAGS = "--deep";
@@ -1096,7 +1097,7 @@
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = 7ER2WP8VB3;
+				DEVELOPMENT_TEAM = EA4A28G9X5;
 				INFOPLIST_FILE = Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				OTHER_CODE_SIGN_FLAGS = "--deep";

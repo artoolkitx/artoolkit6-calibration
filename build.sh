@@ -10,13 +10,21 @@
 # Author(s): Philip Lamb, Thorsten Bux, John Wolf, Dan Bell.
 #
 
+# -e = exit on errors; -x = debug
+set -e
+
+# -x = debug
+set -x
+
 # Get our location.
 OURDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-SDK_VERSION='1.0.3'
+SDK_VERSION='1.0.6.1'
+# If the version number includes a dev build number, drop it.
+SDK_VERSION_CANON=`echo -n "${SDK_VERSION}" | sed -E -e 's/([0-9]+\.[0-9]+\.[0-9]+)(\.[0-9])?/\1/'`
 # If the tiny version number is 0, drop it.
-SDK_VERSION_PRETTY=`echo -n "${SDK_VERSION}" | sed -E -e 's/([0-9]+\.[0-9]+)\.0/\1/'`
-SDK_URL_DIR="https://github.com/artoolkitx/artoolkitx/releases/download/${SDK_VERSION_PRETTY}/"
+SDK_VERSION_PRETTY=`echo -n "${SDK_VERSION_CANON}" | sed -E -e 's/([0-9]+\.[0-9]+)\.0/\1/'`
+SDK_URL_DIR="https://github.com/artoolkitx/artoolkitx/releases/download/${SDK_VERSION}/"
 
 VERSION=`sed -En -e 's/.*VERSION_STRING[[:space:]]+"([0-9]+\.[0-9]+(\.[0-9]+)*)".*/\1/p' ${OURDIR}/version.h`
 # If the tiny version number is 0, drop it.
@@ -30,12 +38,6 @@ function usage {
 if [ $# -eq 0 ]; then
     usage
 fi
-
-# -e = exit on errors; -x = debug
-set -e
-
-# -x = debug
-#set -x
 
 # Parse parameters
 while test $# -gt 0

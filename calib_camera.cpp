@@ -215,14 +215,19 @@ static void quit(int rc);
 static void reshape(int w, int h);
 static void drawView(void);
 
-//static void          init(int argc, char *argv[]);
-//static void          usage(char *com);
+static void init(int argc, char *argv[]);
+static void usage(char *com);
 static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, ARdouble err_max, void *userdata);
 
 static void startVideo(void)
 {
-    char buf[256];
-    snprintf(buf, sizeof(buf), "%s %s", (gPreferenceCameraOpenToken ? gPreferenceCameraOpenToken : ""), (gPreferenceCameraResolutionToken ? gPreferenceCameraResolutionToken : ""));
+    char *buf = NULL;
+    if (asprintf(&buf, "%s%s%s",
+             (gPreferenceCameraOpenToken ? gPreferenceCameraOpenToken : ""),
+             (gPreferenceCameraOpenToken && gPreferenceCameraResolutionToken ? " " : ""),
+                 (gPreferenceCameraResolutionToken ? gPreferenceCameraResolutionToken : "")) < 0) {
+        ARLOGe("Error: out of memory!!!.\n");
+    }
     
     vs = new ARVideoSource;
     if (!vs) {
@@ -236,6 +241,7 @@ static void startVideo(void)
         }
     }
     gPostVideoSetupDone = false;
+    free(buf);
 }
 
 static void stopVideo(void)
@@ -349,6 +355,9 @@ int main(int argc, char *argv[])
     gCalibrationPatternType = getPreferencesCalibrationPatternType(gPreferences);
     gCalibrationPatternSize = getPreferencesCalibrationPatternSize(gPreferences);
     gCalibrationPatternSpacing = getPreferencesCalibrationPatternSpacing(gPreferences);
+    
+    // Allow command-line to override preferences.
+    init(argc, argv);
     
     gSDLEventPreferencesChanged = SDL_RegisterEvents(1);
     
@@ -704,23 +713,22 @@ static void usage(char *com)
     exit(0);
 }
 
-/*
 static void init(int argc, char *argv[])
 {
-    ARGViewport     viewport;
-    char           *vconf = NULL;
-    int             i;
-    int             gotTwoPartOption;
-    int             screenWidth, screenHeight, screenMargin;
+    int i;
+    int gotTwoPartOption;
     
-    chessboardCornerNumX = 0;
-    chessboardCornerNumY = 0;
-    calibImageNum        = 0;
-    patternWidth         = 0.0f;
+    char *vconf = NULL;
+    int cornerNumX = 0;
+    int cornerNumY = 0;
+    int calibImageNum = 0;
+    float patternWidth = 0.0f;
     
+    char *cwd = NULL;
     arMalloc(cwd, char, MAXPATHLEN);
     if (!getcwd(cwd, MAXPATHLEN)) ARLOGe("Unable to read current working directory.\n");
     else ARPRINT("Current working directory is '%s'\n", cwd);
+    free(cwd);
     
     i = 1; // argv[0] is name of app, so start at 1.
     while (i < argc) {
@@ -741,17 +749,17 @@ static void init(int argc, char *argv[])
                 ARPRINT("%s version %s\n", argv[0], AR_HEADER_VERSION_STRING);
                 exit(0);
             } else if( strncmp(argv[i], "-cornerx=", 9) == 0 ) {
-                if( sscanf(&(argv[i][9]), "%d", &chessboardCornerNumX) != 1 ) usage(argv[0]);
-                if( chessboardCornerNumX <= 0 ) usage(argv[0]);
+                if( sscanf(&(argv[i][9]), "%d", &cornerNumX) != 1 ) usage(argv[0]);
+                if( cornerNumX <= 0 ) usage(argv[0]);
             } else if( strncmp(argv[i], "-cornery=", 9) == 0 ) {
-                if( sscanf(&(argv[i][9]), "%d", &chessboardCornerNumY) != 1 ) usage(argv[0]);
-                if( chessboardCornerNumY <= 0 ) usage(argv[0]);
+                if( sscanf(&(argv[i][9]), "%d", &cornerNumY) != 1 ) usage(argv[0]);
+                if( cornerNumY <= 0 ) usage(argv[0]);
             } else if( strncmp(argv[i], "-imagenum=", 10) == 0 ) {
                 if( sscanf(&(argv[i][10]), "%d", &calibImageNum) != 1 ) usage(argv[0]);
                 if( calibImageNum <= 0 ) usage(argv[0]);
             } else if( strncmp(argv[i], "-pattwidth=", 11) == 0 ) {
                 if( sscanf(&(argv[i][11]), "%f", &patternWidth) != 1 ) usage(argv[0]);
-                if( patternWidth <= 0 ) usage(argv[0]);
+                if( patternWidth <= 0.0 ) usage(argv[0]);
             } else {
                 ARLOGe("Error: invalid command line argument '%s'.\n", argv[i]);
                 usage(argv[0]);
@@ -759,17 +767,30 @@ static void init(int argc, char *argv[])
         }
         i++;
     }
-    if( chessboardCornerNumX == 0 ) chessboardCornerNumX = CHESSBOARD_CORNER_NUM_X;
-    if( chessboardCornerNumY == 0 ) chessboardCornerNumY = CHESSBOARD_CORNER_NUM_Y;
-    if( calibImageNum == 0 )        calibImageNum = CALIB_IMAGE_NUM;
-    if( patternWidth == 0.0f )       patternWidth = (float)CHESSBOARD_PATTERN_WIDTH;
-    ARPRINT("CHESSBOARD_CORNER_NUM_X = %d\n", chessboardCornerNumX);
-    ARPRINT("CHESSBOARD_CORNER_NUM_Y = %d\n", chessboardCornerNumY);
-    ARPRINT("CHESSBOARD_PATTERN_WIDTH = %f\n", patternWidth);
-    ARPRINT("CALIB_IMAGE_NUM = %d\n", calibImageNum);
-    ARPRINT("Video parameter: %s\n", vconf);
-    
-*/
+    if (cornerNumX != 0) {
+        ARPRINT("gCalibrationPatternSize.width = %d\n", cornerNumX);
+        gCalibrationPatternSize.width = cornerNumX;
+    }
+    if (cornerNumY != 0) {
+        ARPRINT("gCalibrationPatternSize.height = %d\n", cornerNumY);
+        gCalibrationPatternSize.height = cornerNumY;
+    }
+    if (patternWidth != 0.0f) {
+        ARPRINT("gCalibrationPatternSpacing = %f\n", patternWidth);
+        gCalibrationPatternSpacing = patternWidth;
+    }
+    if (calibImageNum != 0) {
+        ARPRINT("gPreferencesCalibImageCountMax = %d\n", calibImageNum);
+        gPreferencesCalibImageCountMax = calibImageNum;
+    }
+    if (vconf != NULL) {
+        ARPRINT("gPreferenceCameraOpenToken = '%s'\n", vconf);
+        free(gPreferenceCameraOpenToken);
+        gPreferenceCameraOpenToken = strdup(vconf);
+        free(gPreferenceCameraResolutionToken);
+        gPreferenceCameraResolutionToken = NULL;
+    }
+}
 
 static void drawBackground(const float width, const float height, const float x, const float y, const bool drawBorder)
 {
